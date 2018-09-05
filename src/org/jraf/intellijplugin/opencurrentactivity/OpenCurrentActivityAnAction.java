@@ -24,22 +24,6 @@
  */
 package org.jraf.intellijplugin.opencurrentactivity;
 
-import java.io.BufferedReader;
-import java.io.IOException;
-import java.io.InputStreamReader;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.List;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
-
-import org.jetbrains.annotations.NotNull;
-import org.jetbrains.annotations.Nullable;
-import org.jraf.intellijplugin.opencurrentactivity.exception.ExecutionAdbException;
-import org.jraf.intellijplugin.opencurrentactivity.exception.MultipleDevicesAdbException;
-import org.jraf.intellijplugin.opencurrentactivity.exception.NoDevicesAdbException;
-import org.jraf.intellijplugin.opencurrentactivity.exception.ParseAdbException;
-
 import com.intellij.openapi.actionSystem.AnAction;
 import com.intellij.openapi.actionSystem.AnActionEvent;
 import com.intellij.openapi.actionSystem.PlatformDataKeys;
@@ -55,11 +39,26 @@ import com.intellij.openapi.wm.StatusBar;
 import com.intellij.openapi.wm.WindowManager;
 import com.intellij.psi.PsiFile;
 import com.intellij.psi.search.PsiShortNamesCache;
+import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
+import org.jraf.intellijplugin.opencurrentactivity.exception.ExecutionAdbException;
+import org.jraf.intellijplugin.opencurrentactivity.exception.MultipleDevicesAdbException;
+import org.jraf.intellijplugin.opencurrentactivity.exception.NoDevicesAdbException;
+import org.jraf.intellijplugin.opencurrentactivity.exception.ParseAdbException;
+
+import java.io.BufferedReader;
+import java.io.IOException;
+import java.io.InputStreamReader;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.List;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 public class OpenCurrentActivityAnAction extends AnAction {
     private static final Logger log = Logger.getInstance(OpenCurrentActivityAnAction.class);
 
-    private static final String PATTERN_FOCUSED_ACTIVITY = "mFocusedActivity";
+    private static final String PATTERN_FOCUSED_ACTIVITY = "ResumedActivity";
     private static final Pattern PATTERN_ACTIVITY_NAME = Pattern.compile(".* ([a-zA-Z0-9.]+)/([a-zA-Z0-9.]+).*");
     private static final String PATTERN_MULTIPLE_DEVICE = "more than one device";
     private static final String PATTERN_DEVICE_LIST_HEADER = "List";
@@ -73,6 +72,7 @@ public class OpenCurrentActivityAnAction extends AnAction {
     private static final String UI_NO_SDK_MESSAGE = "Could not find the path for the Android SDK.  Have you configured it?";
     private static final String UI_GENERIC_WARNING = "Warning";
     private static final String EXT_JAVA = ".java";
+    private static final String EXT_KOTLIN = ".kt";
 
     private StatusBar mStatusBar;
 
@@ -144,7 +144,7 @@ public class OpenCurrentActivityAnAction extends AnAction {
         if (dotIndex != -1) {
             activityName = activityName.substring(dotIndex + 1);
         }
-        final String fileName = activityName + EXT_JAVA;
+        final String fileName = activityName;
 
         // Open the file
         ApplicationManager.getApplication().invokeLater(
@@ -152,13 +152,17 @@ public class OpenCurrentActivityAnAction extends AnAction {
                     public void run() {
                         ApplicationManager.getApplication().runReadAction(new Runnable() {
                             public void run() {
-                                PsiFile[] foundFiles = PsiShortNamesCache.getInstance(project).getFilesByName(fileName);
+                                PsiFile[] foundFiles = PsiShortNamesCache.getInstance(project).getFilesByName(fileName + EXT_JAVA);
                                 if (foundFiles.length == 0) {
-                                    log.info("No file with name " + fileName + " found");
-                                    mStatusBar.setInfo("Could not find " + fileName + " in project");
-                                    return;
+                                    foundFiles = PsiShortNamesCache.getInstance(project).getFilesByName(fileName + EXT_KOTLIN);
+                                    if (foundFiles.length == 0) {
+                                        log.info("No file with name " + fileName + " found");
+                                        mStatusBar.setInfo("Could not find " + fileName + " in project");
+                                        return;
+                                    }
                                 }
-                                if (foundFiles.length > 1) log.warn("Found more than one file with name " + fileName);
+                                if (foundFiles.length > 1)
+                                    log.warn("Found more than one file with name " + fileName);
 
                                 PsiFile foundFile = foundFiles[0];
                                 log.info("Found file " + foundFile.getName());
