@@ -20,7 +20,9 @@ That's it!
 Install / Download
 ----
 - Install it directly inside Android Studio / IntelliJ from the plugins settings (click on *Browse repositories...* and search for *Open Current Activity*).
-- Or get the jar and install it manually (click on *Install plugin from disk...*): https://github.com/BoD/OpenCurrentActivityIntelliJPlugin/releases/latest
+- Or get the jar and install it manually (click on *Install plugin from disk...*): 
+https://github.com/kongnanlive/OpenCurrentActivityIntelliJPlugin/blob/master/OpenCurrentActivityIntelliJPlugin.jar
+
 - The plugin page is here: https://plugins.jetbrains.com/plugin/7877
 
 How does it work?
